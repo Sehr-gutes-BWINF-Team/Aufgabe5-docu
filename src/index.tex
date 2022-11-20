@@ -9,7 +9,7 @@ Ziel ist es, einen Knoten in einem gerichteten, zyklischen,
 Graphen zu ermitteln, welcher von den Startkonten mit
 den Indizes Eins und Zwei gleich weit entfernt ist.
 Hierzu wird der Graph als Adjazenzmatrix $A$ dargestellt.
-Es wird, sich die Eigenschaft eines solchen Graphens zunutze gemacht, dass die Anzahl der Pfade von Knoten $i$
+Es wird sich die Eigenschaft eines solchen Graphens zunutze gemacht, dass die Anzahl der Pfade von Knoten $i$
 nach Knoten $j$ der Länge $k$ bestimmt werden kann, indem man die $k$-te
 Potenz der Adjazenzmatrix bildet und den Eintrag in der $i$-ten und $j$-ten Spalte ausliest.
 Es wird so lange die nächsthöhere Potenz der Adjazenzmatrix gebildet, bis eine Spalte errechnet wird, welche sowohl
@@ -34,7 +34,7 @@ dass keine neuen Fälle auftreten werden, oder aber die für die worst-case Vert
 Die Implementierung erfolgt in Java 17.
 Zunächst wird der Graph eingelesen und sowohl in Knoten und Kanten, als auch in eine Adjazenzmatrix übersetzt.
 Die Matrix wird nun iterativ mit der Ausgangsmatrix multipliziert und jeweils abgeglichen, ob ein passender Knoten gefunden wurde.
-Tatsächlich liefert das multiplizieren mit der Ursprungsmatrix nicht nur eine Information darüber, ob ein Pfad
+Tatsächlich liefert das Multiplizieren mit der Ursprungsmatrix nicht nur eine Information darüber, ob ein Pfad
 in $k$ Schritten erreichbar ist, sondern auch über wie viele verschiedene Pfade.
 Diese Zahl wird allerdings sehr schnell, sehr groß, und sorgt für Probleme.
 Da diese Information aber auch nicht notwendig ist, da lediglich relevant ist, ob ein Knoten erreicht werden kann,
@@ -51,10 +51,10 @@ Die gefundenen Pfade sind nicht nur \textit{eine} Lösung, sondern auch die Lös
 Dies ergibt sich aus der iterativ aufsteigenden Matrizenmultiplikation.
 Wurden beide Pfade gefunden endet das Program und gibt den Zielknoten, die Pfadlänge, sowie die Pfade der Startknoten zum Zielknoten aus.
 Findet das Programm keine Lösung innerhalb seines errechneten oberen Limits (siehe \autoref{subsec:laufzeitbetrachtung}) endet das Program, und gibt aus,
-dass es nicht möglich ist den Parkour zu lösen.
+dass es nicht möglich ist, den Parkour zu lösen.
 
 \subsection{Laufzeitbetrachtung}\label{subsec:laufzeitbetrachtung}
-Im folgenden wird die Laufzeit hinsichtlich des Entscheidungsproblems, ob ein Zielknoten existiert, betrachtet.
+Im Folgenden wird die Laufzeit hinsichtlich des Entscheidungsproblems, ob ein Zielknoten existiert, betrachtet.
 In einem Graphen bestehend aus $n$ Knoten und $e$ Kanten ist die schlecht möglichste Verteilung hinsichtlich der notwendigen Schritte
 ein Graph, welcher zwei Kreise enthält, die sich in der Länge um eins unterscheiden.
 Beide Spieler müssen diese Kreise so oft durchlaufen, bis die unterschiedliche Pfadlänge zum Zielknoten ausgeglichen ist.
@@ -260,20 +260,6 @@ public class MatrixManipulator {
         }
 
         return new Matrix(result);
-    }
-
-    public static Matrix add(Matrix a, Matrix b) {
-        // add matrices
-        final int[][] valuesA = a.values();
-        final int[][] valuesB = b.values();
-
-        int[][] values = new int[valuesA.length][valuesA[0].length];
-        for (int i = 0; i < valuesA.length; i++) {
-            for (int j = 0; j < valuesA[0].length; j++) {
-                values[i][j] = valuesA[i][j] + valuesB[i][j];
-            }
-        }
-        return new Matrix(values);
     }
 
 }
