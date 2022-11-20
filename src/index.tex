@@ -73,18 +73,19 @@ Insgesamt ergibt sich also eine Komplexität von $\mathcal{O}\left(n^3 \cdot \le
 Es folgen die Programmausgaben für die Beispiele der BWINF-Website. \\
 \begin{table}[h]
     \centering
-    \begin{tabular}{|l|l|l|l|}
+    \begin{tabular}{|l|l|}
         \hline
-        Beispiel & Matrix & DFS & Gesamt \\ \hline
-        0        & 3      & 0   & 3      \\ \hline
-        1        & 4      & 0   & 4      \\ \hline
-        2        & 19     & 0   & 19     \\ \hline
-        3        & 4      & -   & 4      \\ \hline
-        4        & 10     & 0   & 10     \\ \hline
+        Beispiel & Matrix \\ \hline
+        0        & 3      \\ \hline
+        1        & 4      \\ \hline
+        2        & 19     \\ \hline
+        3        & 4      \\ \hline
+        4        & 10     \\ \hline
     \end{tabular}
     \caption{Laufzeit in Millisekunden}
     \label{tab:my-table}
 \end{table}
+
 \subsection{huepfburg0}\label{subsec:huepfburg0}
 SOLUTION IS NODE 10 IN 3 STEPS \\
 Pfad von 1 nach 10: [Node[id=1], Node[id=18], Node[id=13], Node[id=10]] \\
@@ -110,4 +111,170 @@ Pfad von 2 nach 12: [Node[id=2], Node[id=12], Node[id=11], Node[id=100], Node[id
 
 
 \section{Quellcode}\label{sec:quellcode}
+\begin{lstlisting}[language=Java,label={lst:sourcecode}]
+@RequiredArgsConstructor
+public class Solver {
 
+    private final int number;
+    private final boolean useTestResources;
+
+    private static boolean solutionFound = false;
+
+    public void solve() {
+        FileReader fileReader = new FileReader(useTestResources);
+        final Graph graph = fileReader.read("huepfburg" + number);
+
+        final int cap = graph.getNodes().size() * graph.getNodes().size();
+        long startTime = System.currentTimeMillis();
+        Result result = findTargetNode(graph, cap);
+        long afterResult = System.currentTimeMillis();
+        if (result == null) {
+            System.out.println("Der Parkour ist unlösbar.");
+            System.out.println("Dauer Zielknoten finden via Matrizen: " + (afterResult - startTime));
+            return;
+        }
+
+        Node a = new Node(1);
+        Node b = new Node(2);
+
+        Set<List<Node>> pathFromA = findPathViaDFS(graph, a, result.node, result.steps);
+        solutionFound = false;
+        Set<List<Node>> pathFromB = findPathViaDFS(graph, b, result.node, result.steps);
+        for (final List<Node> nodes : pathFromA) {
+            System.out.println("Pfad von 1 nach " + result.node.id() + ": " + nodes);
+        }
+        for (final List<Node> nodes : pathFromB) {
+            System.out.println("Pfad von 2 nach " + result.node.id() + ": " + nodes);
+        }
+
+        System.out.println("Dauer Zielknoten finden via Matrizen: " + (afterResult - startTime));
+
+    }
+
+    private Result findTargetNode(Graph graph, int cap) {
+        Matrix adjacencyMatrix = graph.toAdjacencyMatrix();
+
+        List<Matrix> previous = new ArrayList<>();
+        Matrix current = adjacencyMatrix;
+        for (int i = 1; i < cap; i++) {
+            int[] reachableFirst = current.values()[0];
+            int[] reachableSecond = current.values()[1];
+
+            for (int j = 0; j < reachableFirst.length; j++) {
+                if (reachableFirst[j] != 0 && reachableFirst[j] == reachableSecond[j]) {
+                    System.out.println("SOLUTION IS NODE " + (j + 1) + " IN " + i + " STEPS");
+                    return new Result(i, new Node(j + 1));
+                }
+            }
+            int alreadyInSet = isNew(previous, current);
+            if (alreadyInSet != -1) {
+                System.out.println(
+                "Es ist nicht möglich den Parkour erfolgreich zu absolvieren, Matrix in Schritt "
+                + (previous.size() + 1) + " ist identisch zu der vorherigen Matrix in Schritt "
+                + (alreadyInSet + 1) + ".");
+                return null;
+            }
+            previous.add(current);
+
+            current = MatrixManipulator.multiply(current, adjacencyMatrix);
+        }
+        System.out.println("Es konnte kein passender Knoten in " + cap + " Schritten ermittelt werden!");
+        return null;
+    }
+
+    private int isNew(List<Matrix> matrices, Matrix matrix) {
+        for (int i = 0; i < matrices.size(); i++) {
+            final Matrix current = matrices.get(i);
+            if (current.equals(matrix)) {
+                System.out.println(matrix + " is the same as matrix with index " + i + ": " + current);
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private Set<List<Node>> findPathViaDFS(Graph graph, Node start, Node target, int steps) {
+        Set<List<Node>> paths = new HashSet<>();
+        findPathViaDFS(graph, start, target, 0, new ArrayList<>(), paths, steps);
+        return paths;
+    }
+
+    private void findPathViaDFS(Graph graph, Node current, Node target, int depth,
+                                List<Node> path, Set<List<Node>> paths, int steps) {
+        if (solutionFound) return;
+        path.add(current);
+        if (depth == steps) {
+            if (current.equals(target)) {
+                paths.add(path);
+                solutionFound = true;
+                return;
+            }
+            return;
+        }
+        final Set<Node> nodes = graph.getNeighbours().get(current);
+        for (Node node : nodes) {
+            int depthNew = depth + 1;
+            findPathViaDFS(graph, node, target, depthNew, new ArrayList<>(path), paths, steps);
+        }
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    class Result {
+        private final int steps;
+        private final Node node;
+    }
+
+
+}
+
+public class MatrixManipulator {
+
+    public static Matrix multiply(Matrix a, Matrix b) {
+
+        final int[][] valuesA = a.values();
+        final int[][] valuesB = b.values();
+
+        int aRows = valuesA.length;
+        int aColumns = valuesA[0].length;
+        int bRows = valuesA.length;
+        int bColumns = valuesA[0].length;
+
+        if (aColumns != bRows) {
+            throw new IllegalArgumentException("A: Rows: " + aColumns
+                    + " did not match B: Columns: " + bRows + ".");
+        }
+
+        int[][] result = new int[aRows][bColumns];
+
+        for (int i = 0; i < aRows; i++) { // aRow
+            for (int j = 0; j < bColumns; j++) { // bColumn
+                for (int k = 0; k < aColumns; k++) { // aColumn
+                    int sum = result[i][j];
+                    if (sum == 0) {
+                        // abbrechen nach 1 möglich → laufzeitverbesserung
+                        result[i][j] = valuesA[i][k] * valuesB[k][j];
+                    }
+                }
+            }
+        }
+
+        return new Matrix(result);
+    }
+
+    public static Matrix add(Matrix a, Matrix b) {
+        // add matrices
+        final int[][] valuesA = a.values();
+        final int[][] valuesB = b.values();
+
+        int[][] values = new int[valuesA.length][valuesA[0].length];
+        for (int i = 0; i < valuesA.length; i++) {
+            for (int j = 0; j < valuesA[0].length; j++) {
+                values[i][j] = valuesA[i][j] + valuesB[i][j];
+            }
+        }
+        return new Matrix(values);
+    }
+
+}
+\end{lstlisting}
